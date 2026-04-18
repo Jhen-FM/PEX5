@@ -15,9 +15,8 @@
     "jest": "^29.0.0"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "author": "Jheniffer",
-  "license": "Descomplica"
+  "license": "MIT"
 }
-
