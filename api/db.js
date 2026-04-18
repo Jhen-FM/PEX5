@@ -1,49 +1,46 @@
-import Database from 'better-sqlite3';
+import initSqlJs from 'sql.js';
 
-const db = new Database('garage.db');
+// Inicializa banco em memória
+let dbPromise = initSqlJs().then(SQL => {
+  const db = new SQL.Database();
 
-// Criação das tabelas
-db.exec(`
-  CREATE TABLE IF NOT EXISTS items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL
-  );
+  // Criação das tabelas
+  db.run(`
+    CREATE TABLE IF NOT EXISTS items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL
+    );
 
-  CREATE TABLE IF NOT EXISTS stock (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item_id INTEGER,
-    qty INTEGER DEFAULT 0,
-    FOREIGN KEY(item_id) REFERENCES items(id)
-  );
+    CREATE TABLE IF NOT EXISTS stock (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER,
+      qty INTEGER DEFAULT 0
+    );
 
-  CREATE TABLE IF NOT EXISTS movements (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item_id INTEGER,
-    qty INTEGER,
-    type TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(item_id) REFERENCES items(id)
-  );
-`);
+    CREATE TABLE IF NOT EXISTS movements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER,
+      qty INTEGER,
+      type TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
-// Inserir dados iniciais apenas se estiver vazio
-const itemsCount = db.prepare('SELECT COUNT(*) as count FROM items').get().count;
-if (itemsCount === 0) {
-  // Itens iniciais
-  db.prepare('INSERT INTO items (name) VALUES (?)').run('Parafuso');
-  db.prepare('INSERT INTO items (name) VALUES (?)').run('Porca');
-  db.prepare('INSERT INTO items (name) VALUES (?)').run('Chave de Fenda');
+  // Inserir dados iniciais
+  db.run("INSERT INTO items (name) VALUES ('Parafuso')");
+  db.run("INSERT INTO items (name) VALUES ('Porca')");
+  db.run("INSERT INTO items (name) VALUES ('Chave de Fenda')");
 
-  // Estoque inicial
-  db.prepare('INSERT INTO stock (item_id, qty) VALUES (?, ?)').run(1, 100);
-  db.prepare('INSERT INTO stock (item_id, qty) VALUES (?, ?)').run(2, 200);
-  db.prepare('INSERT INTO stock (item_id, qty) VALUES (?, ?)').run(3, 50);
+  db.run("INSERT INTO stock (item_id, qty) VALUES (1, 100)");
+  db.run("INSERT INTO stock (item_id, qty) VALUES (2, 200)");
+  db.run("INSERT INTO stock (item_id, qty) VALUES (3, 50)");
 
-  // Movimentações de exemplo
-  db.prepare('INSERT INTO movements (item_id, qty, type) VALUES (?, ?, ?)').run(1, 10, 'saída');
-  db.prepare('INSERT INTO movements (item_id, qty, type) VALUES (?, ?, ?)').run(2, 20, 'entrada');
-  db.prepare('INSERT INTO movements (item_id, qty, type) VALUES (?, ?, ?)').run(3, 5, 'saída');
-}
+  db.run("INSERT INTO movements (item_id, qty, type) VALUES (1, 10, 'saída')");
+  db.run("INSERT INTO movements (item_id, qty, type) VALUES (2, 20, 'entrada')");
+  db.run("INSERT INTO movements (item_id, qty, type) VALUES (3, 5, 'saída')");
 
-export default db;
+  return db;
+});
+
+export default dbPromise;
 
