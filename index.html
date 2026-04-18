@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ateliê Garage - Controle de Estoque</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Cabeçalho -->
+  <header>
+    <h1>🛠️ Ateliê Garage</h1>
+    <p>Sistema de Controle de Estoque</p>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main>
+    <!-- Itens -->
+    <section>
+      <h2>Itens cadastrados</h2>
+      <button onclick="loadItems()">Carregar Itens</button>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nome</th></tr>
+        </thead>
+        <tbody id="items"></tbody>
+      </table>
+    </section>
+
+    <!-- Estoque -->
+    <section>
+      <h2>Estoque atual</h2>
+      <button onclick="loadStock()">Carregar Estoque</button>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Quantidade</th></tr>
+        </thead>
+        <tbody id="stock"></tbody>
+      </table>
+    </section>
+
+    <!-- Movimentações -->
+    <section>
+      <h2>Registrar movimentação</h2>
+      <form id="movementForm">
+        <label for="item_id">ID do Item:</label>
+        <input type="number" id="item_id" name="item_id" required>
+
+        <label for="qty">Quantidade:</label>
+        <input type="number" id="qty" name="qty" required>
+
+        <label for="type">Tipo:</label>
+        <select id="type" name="type" required>
+          <option value="entrada">Entrada</option>
+          <option value="saída">Saída</option>
+        </select>
+
+        <button type="submit">Registrar</button>
+      </form>
+      <div id="movementResult"></div>
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>© 2026 Ateliê Garage - Todos os direitos reservados</p>
+  </footer>
+
+  <!-- Script -->
+  <script>
+    async function loadItems() {
+      const res = await fetch('/api/items');
+      const data = await res.json();
+      document.getElementById('items').innerHTML =
+        data.map(i => `<tr><td>${i.id}</td><td>${i.name}</td></tr>`).join('');
+    }
+
+    async function loadStock() {
+      const res = await fetch('/api/stock');
+      const data = await res.json();
+      document.getElementById('stock').innerHTML =
+        data.map(s => `<tr><td>${s.name}</td><td>${s.qty}</td></tr>`).join('');
+    }
+
+    document.getElementById('movementForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        item_id: parseInt(document.getElementById('item_id').value),
+        qty: parseInt(document.getElementById('qty').value),
+        type: document.getElementById('type').value
+      };
+      const res = await fetch('/api/movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      document.getElementById('movementResult').textContent = data.message || data.error;
+      loadStock();
+    });
+  </script>
+</body>
+</html>
