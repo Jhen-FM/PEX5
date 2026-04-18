@@ -2,34 +2,18 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Ateliê Garage - Controle de Estoque</title>
+  <title>Ateliê Garage - Dashboard de Estoque</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- Cabeçalho -->
   <header>
-    <h1>🛠️ Ateliê Garage</h1>
-    <p>Sistema de Controle de Estoque</p>
+    <h1>📊 Dashboard de Estoque - Ateliê Garage</h1>
   </header>
 
-  <!-- Conteúdo principal -->
   <main>
-    <!-- Itens -->
     <section>
-      <h2>Itens cadastrados</h2>
-      <button onclick="loadItems()">Carregar Itens</button>
-      <table>
-        <thead>
-          <tr><th>ID</th><th>Nome</th></tr>
-        </thead>
-        <tbody id="items"></tbody>
-      </table>
-    </section>
-
-    <!-- Estoque -->
-    <section>
-      <h2>Estoque atual</h2>
-      <button onclick="loadStock()">Carregar Estoque</button>
+      <h2>Itens em Estoque</h2>
       <table>
         <thead>
           <tr><th>Item</th><th>Quantidade</th></tr>
@@ -38,42 +22,22 @@
       </table>
     </section>
 
-    <!-- Movimentações -->
     <section>
-      <h2>Registrar movimentação</h2>
-      <form id="movementForm">
-        <label for="item_id">ID do Item:</label>
-        <input type="number" id="item_id" name="item_id" required>
+      <h2>Consumo Mensal</h2>
+      <canvas id="consumoChart"></canvas>
+    </section>
 
-        <label for="qty">Quantidade:</label>
-        <input type="number" id="qty" name="qty" required>
-
-        <label for="type">Tipo:</label>
-        <select id="type" name="type" required>
-          <option value="entrada">Entrada</option>
-          <option value="saída">Saída</option>
-        </select>
-
-        <button type="submit">Registrar</button>
-      </form>
-      <div id="movementResult"></div>
+    <section>
+      <h2>Itens Mais Usados</h2>
+      <canvas id="topItemsChart"></canvas>
     </section>
   </main>
 
-  <!-- Rodapé -->
   <footer>
-    <p>© 2026 Ateliê Garage - Todos os direitos reservados</p>
+    <p>© 2026 Ateliê Garage</p>
   </footer>
 
-  <!-- Script -->
   <script>
-    async function loadItems() {
-      const res = await fetch('/api/items');
-      const data = await res.json();
-      document.getElementById('items').innerHTML =
-        data.map(i => `<tr><td>${i.id}</td><td>${i.name}</td></tr>`).join('');
-    }
-
     async function loadStock() {
       const res = await fetch('/api/stock');
       const data = await res.json();
@@ -81,22 +45,40 @@
         data.map(s => `<tr><td>${s.name}</td><td>${s.qty}</td></tr>`).join('');
     }
 
-    document.getElementById('movementForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const body = {
-        item_id: parseInt(document.getElementById('item_id').value),
-        qty: parseInt(document.getElementById('qty').value),
-        type: document.getElementById('type').value
-      };
-      const res = await fetch('/api/movements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
+    async function loadIndicators() {
+      const res = await fetch('/api/indicators');
       const data = await res.json();
-      document.getElementById('movementResult').textContent = data.message || data.error;
-      loadStock();
-    });
+
+      // Consumo mensal
+      new Chart(document.getElementById('consumoChart'), {
+        type: 'line',
+        data: {
+          labels: data.consumoMensal.map(c => c.mes),
+          datasets: [{
+            label: 'Consumo',
+            data: data.consumoMensal.map(c => c.total),
+            borderColor: '#ff9800',
+            fill: false
+          }]
+        }
+      });
+
+      // Itens mais usados
+      new Chart(document.getElementById('topItemsChart'), {
+        type: 'bar',
+        data: {
+          labels: data.topItems.map(i => i.name),
+          datasets: [{
+            label: 'Quantidade usada',
+            data: data.topItems.map(i => i.total),
+            backgroundColor: '#ff9800'
+          }]
+        }
+      });
+    }
+
+    loadStock();
+    loadIndicators();
   </script>
 </body>
 </html>
