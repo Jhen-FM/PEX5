@@ -1,0 +1,26 @@
+{
+  "name": "atelie-garage",
+  "version": "1.0.0",
+  "description": "Sistema de controle de estoque do Ateliê Garage para deploy no Vercel",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "test": "jest"
+  },
+  "keywords": [
+    "estoque",
+    "garage",
+    "controle",
+    "vercel",
+    "sqlite"
+  ],
+  "author": "Ateliê Garage",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "node-fetch": "^3.3.0"
+  }
+}
