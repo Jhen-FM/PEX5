@@ -1,19 +1,27 @@
-import db from './db.js';
+import dbPromise from './db.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   try {
+    const db = await dbPromise;
+
     // Consumo mensal (últimos 6 meses)
-    const consumoMensal = db.prepare(`
+    const consumoStmt = db.prepare(`
       SELECT strftime('%m/%Y', created_at) as mes, SUM(qty) as total
       FROM movements
       WHERE type = 'saída'
       GROUP BY mes
       ORDER BY mes DESC
       LIMIT 6
-    `).all();
+    `);
+
+    const consumoMensal = [];
+    while (consumoStmt.step()) {
+      consumoMensal.push(consumoStmt.getAsObject());
+    }
+    consumoStmt.free();
 
     // Itens mais usados (top 5)
-    const topItems = db.prepare(`
+    const topStmt = db.prepare(`
       SELECT items.name, SUM(movements.qty) as total
       FROM movements
       JOIN items ON movements.item_id = items.id
@@ -21,9 +29,15 @@ export default function handler(req, res) {
       GROUP BY items.name
       ORDER BY total DESC
       LIMIT 5
-    `).all();
+    `);
 
-    // Se não houver movimentações, retorna dados iniciais
+    const topItems = [];
+    while (topStmt.step()) {
+      topItems.push(topStmt.getAsObject());
+    }
+    topStmt.free();
+
+    // Se não houver dados, retorna valores iniciais simulados
     const response = {
       consumoMensal: consumoMensal.length > 0 ? consumoMensal : [
         { mes: '04/2026', total: 10 },
